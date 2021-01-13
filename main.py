@@ -22,6 +22,7 @@ class ProcInfo:
     start_time = None
     name = ""
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -41,11 +42,11 @@ class MainWindow(QMainWindow):
         config.read('config.ini')
         self.bot_token = config['main']['bot_token']
         self.user_id = config['main']['user_id']
-        
+
         self.watched_procs = []
-        
+
         self.proc_infos = {}
-        
+
     def on_notification_click(self):
         idx = self.ui.listView.selectedIndexes()[0]
         item = self.proc_list_model.itemFromIndex(idx)
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
     def update_lists(self):
         self.update_process_list()
         self.update_watched_procs()
-        
+
     def update_process_list(self):
         pids = win32process.EnumProcesses()
         updated_proc_infos = {}
@@ -69,7 +70,7 @@ class MainWindow(QMainWindow):
                 name = win32process.GetModuleFileNameEx(handle, 0)
                 _, name = os.path.split(name)
                 times = win32process.GetProcessTimes(handle)
-                
+
                 proc_info = ProcInfo()
                 proc_info.name = name
                 proc_info.start_time = times['CreationTime']
@@ -80,7 +81,8 @@ class MainWindow(QMainWindow):
                 print(str(e))
                 updated_proc_infos[pid] = None
 
-        new_procs = [proc for (pid, proc) in updated_proc_infos.items() if proc is not None and pid not in self.proc_infos]
+        new_procs = [proc for (pid, proc) in updated_proc_infos.items()
+                     if proc is not None and pid not in self.proc_infos]
         self.proc_infos = updated_proc_infos
 
         for row in reversed(range(0, self.proc_list_model.rowCount())):
@@ -94,19 +96,19 @@ class MainWindow(QMainWindow):
             item = QStandardItem(proc.name)
             item.setData(proc)
             self.proc_list_model.insertRow(0, item)
-            
+
     def update_watched_procs(self):
         killed_procs = [proc for proc in self.watched_procs if proc.pid not in self.proc_infos]
         for proc in killed_procs:
             self.send_message_to_bot("process {} is killed".format(proc.name))
 
         self.watched_procs = [proc for proc in self.watched_procs if proc not in killed_procs]
-            
+
     def send_message_to_bot(self, text):
-        message = 'https://api.telegram.org/bot' + self.bot_token + '/sendMessage?chat_id=' + self.user_id +'&text=' + text 
+        message = 'https://api.telegram.org/bot' + self.bot_token + '/sendMessage?chat_id=' + self.user_id + '&text=' + text
         response = requests.get(message)
         print(response.json())
-        
+
 
 if __name__ == "__main__":
     PySide2.QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
