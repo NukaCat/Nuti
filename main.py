@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
                 updated_proc_infos[pid] = proc_info
 
             except Exception as e:
-                print(str(e))
                 updated_proc_infos[pid] = None
 
         new_procs = [proc for (pid, proc) in updated_proc_infos.items()
